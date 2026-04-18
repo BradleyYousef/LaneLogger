@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7 text-center">
+    <h1 class="display-4 fw-bold mb-3">LANELOGGER</h1>
+    <p class="lead mb-2">Simple and efficient platform for managing athletics meets.</p>
+    <p class="text-muted mb-4">
+      Create events, manage participants, and track athlete results with precision and ease.
+    </p>
+    <div class="d-flex justify-content-center gap-3 mb-5">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-warning px-4">LOGIN</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-dark px-4">REGISTER</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

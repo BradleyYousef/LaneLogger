@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-4">
+    <h2 class="h4 text-center mb-3">Create account</h2>
+    <form method="post" class="bg-white border rounded p-4">
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Confirm password</label>
+        <input type="password" name="confirm_password" class="form-control">
+      </div>
+      <button class="btn btn-warning w-100 mb-2">Create account</button>
+      <p class="small text-center mb-0">
+        Already registered? <a href="{{ url_for('auth.login') }}">Login</a>
+      </p>
+    </form>
+  </div>
+</div>
+{% endblock %}

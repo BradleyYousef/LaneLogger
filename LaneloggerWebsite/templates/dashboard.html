@@ -1,9 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-</head>
-<body>
-    <h1>Dashboard</h1>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 fw-bold mb-3">Welcome back, {{ session.username }}</h1>
+<p class="text-muted mb-4">Manage your athletics meets with precision and ease.</p>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <a href="{{ url_for('main.create_event') }}" class="text-decoration-none text-dark">
+      <div class="bg-white border rounded p-4 h-100">
+        <h2 class="h5 fw-semibold mb-1">Create Event</h2>
+        <p class="text-muted mb-0">Set up a new athletics meet.</p>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('main.events') }}" class="text-decoration-none text-dark">
+      <div class="bg-white border rounded p-4 h-100">
+        <h2 class="h5 fw-semibold mb-1">View Events</h2>
+        <p class="text-muted mb-0">Browse and run your events.</p>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('main.athletes') }}" class="text-decoration-none text-dark">
+      <div class="bg-white border rounded p-4 h-100">
+        <h2 class="h5 fw-semibold mb-1">Manage Athletes</h2>
+        <p class="text-muted mb-0">Add and edit athletes.</p>
+      </div>
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,10 +1,15 @@
 import sqlite3
-import os
+from flask import g, current_app
 
+# get db
 def get_db():
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    db_path = os.path.join(BASE_DIR, "database.db")
+    if "db" not in g:
+        g.db = sqlite3.connect(current_app.config["DATABASE"])
+        g.db.row_factory = sqlite3.Row
+    return g.db
 
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    return conn
+# close db
+def close_db(e=None):
+    db = g.pop("db", None)
+    if db is not None:
+        db.close()
