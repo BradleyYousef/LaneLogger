@@ -174,3 +174,32 @@ def export_results(event_id):
         writer.writerow([r["heat_number"], r["name"], r["result_value"], r["position"]])
     output.seek(0)
     return send_file(output, mimetype="text/csv", as_attachment=True, download_name=f"event_{event_id}_results.csv")
+
+@main_bp.route("/meets")
+@login_required
+def meets():
+    db = get_db()
+    meets = db.execute("SELECT * FROM meets ORDER BY date").fetchall()
+    return render_template("meets.html", meets=meets)
+
+@main_bp.route("/meets/create", methods=["GET", "POST"])
+@login_required
+def create_meet():
+    if request.method == "POST":
+        f = request.form
+        db = get_db()
+        db.execute(
+            "INSERT INTO meets (name, date, location) VALUES (?, ?, ?)",
+            (f["name"], f["date"], f["location"])
+        )
+        db.commit()
+        return redirect(url_for("main.meets"))
+    return render_template("create_meet.html")
+
+@main_bp.route("/meets/<int:meet_id>")
+@login_required
+def view_meet(meet_id):
+    db = get_db()
+    meet = db.execute("SELECT * FROM meets WHERE id = ?", (meet_id,)).fetchone()
+    events = db.execute("SELECT * FROM events WHERE meet_id = ?", (meet_id,)).fetchall()
+    return render_template("view_meet.html", meet=meet, events=events)

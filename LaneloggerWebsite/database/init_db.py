@@ -18,6 +18,14 @@ def init_db():
         password BLOB NOT NULL
     );
 
+    -- MEETS (new)
+    CREATE TABLE IF NOT EXISTS meets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        date TEXT,
+        location TEXT
+    );
+
     -- ATHLETES
     CREATE TABLE IF NOT EXISTS athletes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,9 +35,10 @@ def init_db():
         team TEXT
     );
 
-    -- EVENTS
+    -- EVENTS (now linked to meets)
     CREATE TABLE IF NOT EXISTS events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        meet_id INTEGER,
         name TEXT NOT NULL,
         type TEXT NOT NULL,
         discipline TEXT NOT NULL,
@@ -38,7 +47,8 @@ def init_db():
         date TEXT,
         location TEXT,
         lanes INTEGER DEFAULT 8,
-        heats INTEGER DEFAULT 1
+        heats INTEGER DEFAULT 1,
+        FOREIGN KEY (meet_id) REFERENCES meets(id)
     );
 
     -- EVENT PARTICIPANTS

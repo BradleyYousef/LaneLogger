@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Athletes</h2>
+
+<form method="post" class="mb-3">
+  <input name="name" class="form-control mb-2" placeholder="Name">
+  <input name="age" class="form-control mb-2" placeholder="Age">
+  <select name="gender" class="form-control mb-2">
+    <option>Male</option>
+    <option>Female</option>
+    <option>Mixed</option>
+  </select>
+  <input name="team" class="form-control mb-2" placeholder="Team">
+  <button class="btn btn-warning w-100">Add Athlete</button>
+</form>
+
+<table class="table bg-white">
+  <tr><th>Name</th><th>Age</th><th>Gender</th><th>Team</th><th></th></tr>
+  {% for a in athletes %}
+  <tr>
+    <td>{{ a.name }}</td>
+    <td>{{ a.age }}</td>
+    <td>{{ a.gender }}</td>
+    <td>{{ a.team }}</td>
+    <td><a href="{{ url_for('main.delete_athlete', athlete_id=a.id) }}" class="btn btn-sm btn-danger">Delete</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
