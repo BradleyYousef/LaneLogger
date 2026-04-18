@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4 fw-bold mb-0">Events</h1>
   <a href="{{ url_for('main.create_event') }}" class="btn btn-warning">Create Event</a>
 </div>
 
 {% if not events %}
-  <p class="text-muted">No events yet. Create your first event.</p>
+  <p class="text-muted">No events yet.</p>
 {% else %}
   <div class="table-responsive bg-white border rounded">
     <table class="table mb-0">
@@ -23,22 +24,23 @@
       </thead>
       <tbody>
         {% for e in events %}
-          <tr>
-            <td>{{ e.name }}</td>
-            <td>{{ e.type }}</td>
-            <td>{{ e.discipline }}</td>
-            <td>{{ e.date }}</td>
-            <td>{{ e.location }}</td>
-            <td>{{ e.heats }}</td>
-            <td class="text-end">
-              <a href="{{ url_for('main.run_event', event_id=e.id) }}" class="btn btn-sm btn-success">Run</a>
-              <a href="{{ url_for('main.export_results', event_id=e.id) }}" class="btn btn-sm btn-outline-secondary">Export</a>
-              <a href="{{ url_for('main.delete_event', event_id=e.id) }}" class="btn btn-sm btn-outline-danger">Delete</a>
-            </td>
-          </tr>
+        <tr>
+          <td>{{ e.name }}</td>
+          <td>{{ e.type }}</td>
+          <td>{{ e.discipline }}</td>
+          <td>{{ e.date }}</td>
+          <td>{{ e.location }}</td>
+          <td>{{ e.heats }}</td>
+          <td class="text-end">
+            <a href="{{ url_for('main.run_event', event_id=e.id) }}" class="btn btn-sm btn-success">Run</a>
+            <a href="{{ url_for('main.export_results', event_id=e.id) }}" class="btn btn-sm btn-outline-secondary">Export</a>
+            <a href="{{ url_for('main.delete_event', event_id=e.id) }}" class="btn btn-sm btn-outline-danger">Delete</a>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 {% endif %}
+
 {% endblock %}
