@@ -19,3 +19,8 @@ app = create_app()
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+from database.db import get_db, close_db
+
+db = get_db()
+close_db(db)
