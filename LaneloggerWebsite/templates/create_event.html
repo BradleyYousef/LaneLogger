@@ -5,13 +5,11 @@
 
 <form method="post" class="bg-white border rounded p-4">
 
-  <!-- Event Name -->
   <div class="mb-3">
     <label class="form-label">Event Name</label>
     <input type="text" name="name" class="form-control" required>
   </div>
 
-  <!-- Type / Discipline / Age / Gender -->
   <div class="row">
     <div class="col-md-3 mb-3">
       <label class="form-label">Type</label>
@@ -59,7 +57,6 @@
     </div>
   </div>
 
-  <!-- Date / Location -->
   <div class="row">
     <div class="col-md-4 mb-3">
       <label class="form-label">Date</label>
@@ -72,7 +69,21 @@
     </div>
   </div>
 
-  <!-- Lanes / Heats -->
   <div class="row">
     <div class="col-md-3 mb-3">
-      <label class="form-label">
+      <label class="form-label">Lanes</label>
+      <input type="number" name="lanes" class="form-control" value="8">
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Heats</label>
+      <input type="number" name="heats" class="form-control" value="1">
+    </div>
+  </div>
+
+  <button class="btn btn-warning">Create Event</button>
+  <a href="{{ url_for('main.events') }}" class="btn btn-secondary ms-2">Cancel</a>
+
+</form>
+
+{% endblock %}

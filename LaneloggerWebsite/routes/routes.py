@@ -31,18 +31,30 @@ def dashboard():
 @login_required
 def athletes():
     db = get_db()
+
     if request.method == "POST":
         name = request.form["name"].strip()
         age = request.form.get("age")
         gender = request.form.get("gender")
         team = request.form.get("team")
-        if name:
-            db.execute("INSERT INTO athletes (name, age, gender, team) VALUES (?, ?, ?, ?)", (name, age, gender, team))
-            db.commit()
-        else:
+
+        if not name:
             flash("Name required", "danger")
+            return redirect(url_for("main.athletes"))
+
+        # assign athlete number
+        last_num = db.execute("SELECT MAX(athlete_number) FROM athletes").fetchone()[0]
+        next_num = (last_num + 1) if last_num else 1
+
+        db.execute(
+            "INSERT INTO athletes (athlete_number, name, age, gender, team) VALUES (?, ?, ?, ?, ?)",
+            (next_num, name, age, gender, team)
+        )
+        db.commit()
+
         return redirect(url_for("main.athletes"))
-    athletes = db.execute("SELECT * FROM athletes ORDER BY name").fetchall()
+
+    athletes = db.execute("SELECT * FROM athletes ORDER BY athlete_number").fetchall()
     return render_template("athletes.html", athletes=athletes)
 
 @main_bp.route("/athletes/delete/<int:athlete_id>")
@@ -65,16 +77,32 @@ def events():
 @main_bp.route("/events/create", methods=["GET", "POST"])
 @login_required
 def create_event():
+    db = get_db()
+
     if request.method == "POST":
         f = request.form
-        db = get_db()
+
         db.execute(
-            "INSERT INTO events (name, type, discipline, age_group, gender_group, date, location, lanes, heats) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (f["name"], f["type"], f["discipline"], f.get("age_group"), f.get("gender_group"), f.get("date"), f.get("location"), f.get("lanes"), f.get("heats"))
+            "INSERT INTO events (meet_id, name, type, discipline, age_group, gender_group, date, location, lanes, heats) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                f.get("meet_id"),
+                f["name"],
+                f["type"],
+                f["discipline"],
+                f.get("age_group"),
+                f.get("gender_group"),
+                f.get("date"),
+                f.get("location"),
+                f.get("lanes"),
+                f.get("heats")
+            )
         )
         db.commit()
         return redirect(url_for("main.events"))
-    return render_template("create_event.html")
+
+    meets = db.execute("SELECT * FROM meets ORDER BY date").fetchall()
+    return render_template("create_event.html", meets=meets)
 
 # delete event
 @main_bp.route("/events/delete/<int:event_id>")
@@ -95,9 +123,11 @@ def run_event(event_id):
     event = db.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
     if not event:
         return redirect(url_for("main.events"))
+
     heats = event["heats"] or 1
     lanes = event["lanes"] or 8
-    all_athletes = db.execute("SELECT * FROM athletes ORDER BY name").fetchall()
+    all_athletes = db.execute("SELECT * FROM athletes ORDER BY athlete_number").fetchall()
+
     heat_number = int(request.args.get("heat", 1))
     if heat_number < 1 or heat_number > heats:
         heat_number = 1
@@ -114,8 +144,12 @@ def run_event(event_id):
                         "SELECT id FROM event_participants WHERE event_id = ? AND heat_number = ? AND lane = ?",
                         (event_id, heat_number, lane)
                     ).fetchone()
+
                     if existing:
-                        db.execute("UPDATE event_participants SET athlete_id = ? WHERE id = ?", (athlete_id, existing["id"]))
+                        db.execute(
+                            "UPDATE event_participants SET athlete_id = ? WHERE id = ?",
+                            (athlete_id, existing["id"])
+                        )
                     else:
                         db.execute(
                             "INSERT INTO event_participants (event_id, athlete_id, heat_number, lane) VALUES (?, ?, ?, ?)",
@@ -129,15 +163,20 @@ def run_event(event_id):
                 result_val = request.form.get(f"result_{lane}")
                 if not result_val:
                     continue
+
                 participant = db.execute(
                     "SELECT * FROM event_participants WHERE event_id = ? AND heat_number = ? AND lane = ?",
                     (event_id, heat_number, lane)
                 ).fetchone()
+
                 if not participant:
                     continue
+
                 athlete_id = participant["athlete_id"]
+
                 db.execute(
-                    "INSERT INTO results (event_id, athlete_id, heat_number, result_value, attempt_number) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO results (event_id, athlete_id, heat_number, result_value, attempt_number) "
+                    "VALUES (?, ?, ?, ?, ?)",
                     (event_id, athlete_id, heat_number, float(result_val), 1)
                 )
             db.commit()
@@ -146,17 +185,37 @@ def run_event(event_id):
 
     # load participants
     participants = db.execute(
-        "SELECT ep.*, a.name FROM event_participants ep JOIN athletes a ON ep.athlete_id = a.id WHERE ep.event_id = ? AND ep.heat_number = ? ORDER BY ep.lane",
+        "SELECT ep.*, a.name, a.athlete_number "
+        "FROM event_participants ep "
+        "JOIN athletes a ON ep.athlete_id = a.id "
+        "WHERE ep.event_id = ? AND ep.heat_number = ? "
+        "ORDER BY ep.lane",
         (event_id, heat_number)
     ).fetchall()
 
     # load results
     results = db.execute(
-        "SELECT r.*, a.name, ep.lane FROM results r JOIN athletes a ON r.athlete_id = a.id LEFT JOIN event_participants ep ON ep.event_id = r.event_id AND ep.athlete_id = r.athlete_id AND ep.heat_number = r.heat_number WHERE r.event_id = ? AND r.heat_number = ? ORDER BY r.result_value ASC",
+        "SELECT r.*, a.name, a.athlete_number, ep.lane "
+        "FROM results r "
+        "JOIN athletes a ON r.athlete_id = a.id "
+        "LEFT JOIN event_participants ep ON ep.event_id = r.event_id "
+        "AND ep.athlete_id = r.athlete_id "
+        "AND ep.heat_number = r.heat_number "
+        "WHERE r.event_id = ? AND r.heat_number = ? "
+        "ORDER BY r.result_value ASC",
         (event_id, heat_number)
     ).fetchall()
 
-    return render_template("run_event.html", event=event, heats=heats, lanes=lanes, heat_number=heat_number, all_athletes=all_athletes, participants=participants, results=results)
+    return render_template(
+        "run_event.html",
+        event=event,
+        heats=heats,
+        lanes=lanes,
+        heat_number=heat_number,
+        all_athletes=all_athletes,
+        participants=participants,
+        results=results
+    )
 
 # export csv
 @main_bp.route("/events/<int:event_id>/export")
@@ -164,17 +223,25 @@ def run_event(event_id):
 def export_results(event_id):
     db = get_db()
     rows = db.execute(
-        "SELECT r.heat_number, a.name, r.result_value, r.position FROM results r JOIN athletes a ON r.athlete_id = a.id WHERE r.event_id = ? ORDER BY r.heat_number, r.result_value",
+        "SELECT r.heat_number, a.athlete_number, a.name, r.result_value, r.position "
+        "FROM results r "
+        "JOIN athletes a ON r.athlete_id = a.id "
+        "WHERE r.event_id = ? "
+        "ORDER BY r.heat_number, r.result_value",
         (event_id,)
     ).fetchall()
+
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Heat", "Athlete", "Result", "Position"])
+    writer.writerow(["Heat", "Athlete #", "Athlete", "Result", "Position"])
+
     for r in rows:
-        writer.writerow([r["heat_number"], r["name"], r["result_value"], r["position"]])
+        writer.writerow([r["heat_number"], r["athlete_number"], r["name"], r["result_value"], r["position"]])
+
     output.seek(0)
     return send_file(output, mimetype="text/csv", as_attachment=True, download_name=f"event_{event_id}_results.csv")
 
+# meets
 @main_bp.route("/meets")
 @login_required
 def meets():

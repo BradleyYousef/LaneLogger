@@ -18,7 +18,7 @@ def init_db():
         password BLOB NOT NULL
     );
 
-    -- MEETS (new)
+    -- MEETS
     CREATE TABLE IF NOT EXISTS meets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -29,13 +29,14 @@ def init_db():
     -- ATHLETES
     CREATE TABLE IF NOT EXISTS athletes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        athlete_number INTEGER UNIQUE,
         name TEXT NOT NULL,
         age INTEGER,
         gender TEXT,
         team TEXT
     );
 
-    -- EVENTS (now linked to meets)
+    -- EVENTS
     CREATE TABLE IF NOT EXISTS events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         meet_id INTEGER,
@@ -80,7 +81,6 @@ def init_db():
     conn.close()
 
     print("Database initialized correctly.")
-
 
 if __name__ == "__main__":
     init_db()
