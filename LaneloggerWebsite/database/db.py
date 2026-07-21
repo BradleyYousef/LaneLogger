@@ -1,21 +1,32 @@
-import sqlite3
 import os
-from flask import g
+import sqlite3
+from flask import current_app, g
+
 
 def get_db():
+    """
+    Get the SQLite database connection for the current request.
+    Flask's g object ensures we reuse one connection per request.
+    """
     if "db" not in g:
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        db_path = os.path.join(BASE_DIR, "database.db")
+        db_path = current_app.config["DATABASE"]
 
-        os.makedirs(BASE_DIR, exist_ok=True)
+        # Make sure the database directory exists
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
         g.db = sqlite3.connect(db_path)
         g.db.row_factory = sqlite3.Row
 
+        # Enforce foreign key relationships in SQLite
+        g.db.execute("PRAGMA foreign_keys = ON")
+
     return g.db
 
 
-def close_db(e=None):
+def close_db(exception=None):
+    """
+    Close the database connection at the end of the request.
+    """
     db = g.pop("db", None)
 
     if db is not None:

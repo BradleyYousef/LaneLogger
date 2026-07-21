@@ -1,32 +1,133 @@
 {% extends "base.html" %}
-{% block content %}
-<h1 class="h4 fw-bold mb-3">Welcome back, {{ session.username }}</h1>
-<p class="text-muted mb-4">Manage your athletics meets with precision and ease.</p>
 
-<div class="row g-4">
-  <div class="col-md-4">
-    <a href="{{ url_for('main.create_event') }}" class="text-decoration-none text-dark">
-      <div class="bg-white border rounded p-4 h-100">
-        <h2 class="h5 fw-semibold mb-1">Create Event</h2>
-        <p class="text-muted mb-0">Set up a new athletics meet.</p>
-      </div>
-    </a>
-  </div>
-  <div class="col-md-4">
-    <a href="{{ url_for('main.events') }}" class="text-decoration-none text-dark">
-      <div class="bg-white border rounded p-4 h-100">
-        <h2 class="h5 fw-semibold mb-1">View Events</h2>
-        <p class="text-muted mb-0">Browse and run your events.</p>
-      </div>
-    </a>
-  </div>
-  <div class="col-md-4">
-    <a href="{{ url_for('main.athletes') }}" class="text-decoration-none text-dark">
-      <div class="bg-white border rounded p-4 h-100">
-        <h2 class="h5 fw-semibold mb-1">Manage Athletes</h2>
-        <p class="text-muted mb-0">Add and edit athletes.</p>
-      </div>
-    </a>
-  </div>
+{% block title %}
+Dashboard - LaneLogger
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+
+    <h1>
+        Welcome, {{ session.get("username") }}
+    </h1>
+
+    <p class="text-muted">
+        Manage your athletics meets and results.
+    </p>
+
 </div>
+
+
+<div class="row g-4 mb-4">
+
+    <div class="col-md-4">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <h2 class="h5">
+                    Athletes
+                </h2>
+
+                <p class="display-6">
+                    {{ athlete_count }}
+                </p>
+
+                <a
+                    href="{{ url_for('main.athletes') }}"
+                    class="btn btn-outline-dark"
+                >
+                    Manage Athletes
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <h2 class="h5">
+                    Meets
+                </h2>
+
+                <p class="display-6">
+                    {{ meet_count }}
+                </p>
+
+                <a
+                    href="{{ url_for('main.meets') }}"
+                    class="btn btn-outline-dark"
+                >
+                    View Meets
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-md-4">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <h2 class="h5">
+                    Events
+                </h2>
+
+                <p class="display-6">
+                    {{ event_count }}
+                </p>
+
+                <a
+                    href="{{ url_for('main.events') }}"
+                    class="btn btn-outline-dark"
+                >
+                    View Events
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card">
+
+    <div class="card-body">
+
+        <h2 class="h5">
+            Get Started
+        </h2>
+
+        <p>
+            Create a meet to begin organising your athletics competition.
+        </p>
+
+        <a
+            href="{{ url_for('main.create_meet') }}"
+            class="btn btn-warning"
+        >
+            Create Meet
+        </a>
+
+    </div>
+
+</div>
+
 {% endblock %}

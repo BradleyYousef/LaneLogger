@@ -1,41 +1,195 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>LaneLogger</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-  </head>
-  <body class="bg-light">
-    <nav class="navbar navbar-expand-lg bg-white border-bottom mb-4">
-      <div class="container">
-        <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">LANELOGGER</a>
-        <div class="ms-auto">
-          {% if session.get('user_id') %}
-            <a href="{{ url_for('main.dashboard') }}" class="me-3 text-decoration-none">Dashboard</a>
-            <a href="{{ url_for('main.events') }}" class="me-3 text-decoration-none">Events</a>
-            <a href="{{ url_for('main.athletes') }}" class="me-3 text-decoration-none">Athletes</a>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-dark btn-sm">Logout</a>
-          {% else %}
-            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-dark btn-sm me-2">Login</a>
-            <a href="{{ url_for('auth.register') }}" class="btn btn-dark btn-sm">Register</a>
-          {% endif %}
-        </div>
-      </div>
-    </nav>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+        LaneLogger
+        {% endblock %}
+    </title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg bg-dark navbar-dark">
 
     <div class="container">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="mb-3">
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }} mb-1">{{ message }}</div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
 
-      {% block content %}{% endblock %}
+        <a
+            class="navbar-brand fw-bold"
+            href="{{ url_for('main.index') }}"
+        >
+            LaneLogger
+        </a>
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarMenu"
+        >
+
+            <span class="navbar-toggler-icon"></span>
+
+        </button>
+
+        <div
+            class="collapse navbar-collapse"
+            id="navbarMenu"
+        >
+
+            {% if session.get("user_id") %}
+
+            <ul class="navbar-nav me-auto">
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="{{ url_for('main.dashboard') }}"
+                    >
+                        Dashboard
+                    </a>
+
+                </li>
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="{{ url_for('main.meets') }}"
+                    >
+                        Meets
+                    </a>
+
+                </li>
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="{{ url_for('main.events') }}"
+                    >
+                        Events
+                    </a>
+
+                </li>
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="{{ url_for('main.athletes') }}"
+                    >
+                        Athletes
+                    </a>
+
+                </li>
+
+            </ul>
+
+            <span class="navbar-text me-3">
+
+                {{ session.get("username") }}
+
+            </span>
+
+            <a
+                class="btn btn-outline-light btn-sm"
+                href="{{ url_for('auth.logout') }}"
+            >
+                Logout
+            </a>
+
+            {% else %}
+
+            <div class="ms-auto">
+
+                <a
+                    class="btn btn-outline-light btn-sm me-2"
+                    href="{{ url_for('auth.login') }}"
+                >
+                    Login
+                </a>
+
+                <a
+                    class="btn btn-warning btn-sm"
+                    href="{{ url_for('auth.register') }}"
+                >
+                    Register
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
     </div>
-  </body>
+
+</nav>
+
+
+<main class="container py-4">
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }}"
+                    role="alert"
+                >
+
+                    {{ message }}
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    {% block content %}
+
+    {% endblock %}
+
+</main>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+></script>
+
+<script
+    src="{{ url_for('static', filename='js/app.js') }}"
+></script>
+
+</body>
+
 </html>

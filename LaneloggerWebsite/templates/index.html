@@ -1,16 +1,61 @@
 {% extends "base.html" %}
+
+{% block title %}
+LaneLogger - Athletics Meet Management
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-lg-7 text-center">
-    <h1 class="display-4 fw-bold mb-3">LANELOGGER</h1>
-    <p class="lead mb-2">Simple and efficient platform for managing athletics meets.</p>
-    <p class="text-muted mb-4">
-      Create events, manage participants, and track athlete results with precision and ease.
+
+<div class="text-center py-5">
+
+    <h1 class="display-3 fw-bold">
+        LaneLogger
+    </h1>
+
+    <p class="lead">
+        Simple athletics meet management.
     </p>
-    <div class="d-flex justify-content-center gap-3 mb-5">
-      <a href="{{ url_for('auth.login') }}" class="btn btn-warning px-4">LOGIN</a>
-      <a href="{{ url_for('auth.register') }}" class="btn btn-dark px-4">REGISTER</a>
+
+    <p class="text-muted mx-auto landing-description">
+
+        Create meets, manage athletes,
+        organise events and heats,
+        assign lanes and record results
+        in one simple platform.
+
+    </p>
+
+    {% if not session.get("user_id") %}
+
+    <div class="mt-4">
+
+        <a
+            href="{{ url_for('auth.register') }}"
+            class="btn btn-warning btn-lg me-2"
+        >
+            Create Account
+        </a>
+
+        <a
+            href="{{ url_for('auth.login') }}"
+            class="btn btn-dark btn-lg"
+        >
+            Login
+        </a>
+
     </div>
-  </div>
+
+    {% else %}
+
+    <a
+        href="{{ url_for('main.dashboard') }}"
+        class="btn btn-dark btn-lg"
+    >
+        Go to Dashboard
+    </a>
+
+    {% endif %}
+
 </div>
+
 {% endblock %}
