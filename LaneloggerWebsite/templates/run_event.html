@@ -1,126 +1,406 @@
 {% extends "base.html" %}
+
+{% block title %}
+Run {{ event.name }} - LaneLogger
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div>
-    <h1 class="h4 fw-bold mb-1">{{ event.name }}</h1>
-    <p class="small text-muted mb-0">
-      {{ event.type|capitalize }} · {{ event.discipline }} · {{ event.age_group }} · {{ event.gender_group }}
-    </p>
-  </div>
-  <a href="{{ url_for('main.events') }}" class="btn btn-outline-secondary btn-sm">Back to Events</a>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+
+    <div>
+
+        <h1 class="h3 fw-bold mb-1">
+            {{ event.name }}
+        </h1>
+
+        <p class="text-muted mb-0">
+
+            {{ event.discipline }}
+
+            · {{ event.age_group or "Open" }}
+
+            · {{ event.gender_group or "Mixed" }}
+
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('main.export_results', event_id=event.id) }}"
+        class="btn btn-outline-secondary"
+    >
+        Export Results
+    </a>
+
 </div>
 
-<div class="mb-3">
-  <form method="get" class="d-inline">
-    <input type="hidden" name="event_id" value="{{ event.id }}">
-    <label class="me-2">Heat:</label>
-    <select name="heat" class="form-select d-inline w-auto" onchange="this.form.submit()">
-      {% for h in range(1, heats + 1) %}
-        <option value="{{ h }}" {% if h == heat_number %}selected{% endif %}>Heat {{ h }}</option>
-      {% endfor %}
-    </select>
-  </form>
+
+<!-- Heat Selector -->
+
+<div class="card shadow-sm mb-4">
+
+    <div class="card-body">
+
+        <form
+            method="GET"
+            action="{{ url_for('main.run_event', event_id=event.id) }}"
+            class="row align-items-end"
+        >
+
+            <div class="col-md-4">
+
+                <label class="form-label">
+                    Select Heat
+                </label>
+
+                <select
+                    name="heat"
+                    class="form-select"
+                    onchange="this.form.submit()"
+                >
+
+                    {% for h in range(1, heats + 1) %}
+
+                    <option
+                        value="{{ h }}"
+                        {% if h == heat_number %}selected{% endif %}
+                    >
+                        Heat {{ h }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <div class="col-md-8">
+
+                <p class="text-muted mb-0">
+                    Assign athletes to lanes and record their results
+                    for Heat {{ heat_number }}.
+                </p>
+
+            </div>
+
+        </form>
+
+    </div>
+
 </div>
+
 
 <div class="row g-4">
-  <div class="col-md-6">
-    <div class="bg-white border rounded p-3">
-      <h2 class="h6 fw-semibold mb-3">Lane Assignment</h2>
-      <form method="post">
-        <input type="hidden" name="action" value="assign">
-        {% for lane in range(1, lanes + 1) %}
-          <div class="row align-items-center mb-2">
-            <div class="col-3">
-              <span class="fw-semibold">Lane {{ lane }}</span>
-            </div>
-            <div class="col-9">
-              <select name="lane_{{ lane }}" class="form-select form-select-sm">
-                <option value="">-- empty --</option>
-                {% for a in all_athletes %}
-                  {% set selected = false %}
-                  {% for p in participants %}
-                    {% if p.lane == lane and p.athlete_id == a.id %}
-                      {% set selected = true %}
-                    {% endif %}
-                  {% endfor %}
-                  <option value="{{ a.id }}" {% if selected %}selected{% endif %}>
-                    {{ a.name }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-        {% endfor %}
-        <button class="btn btn-warning w-100 mt-2">Save Lane Assignments</button>
-      </form>
-    </div>
-  </div>
 
-  <div class="col-md-6">
-    <div class="bg-white border rounded p-3 mb-3">
-      <h2 class="h6 fw-semibold mb-3">Enter Results (Heat {{ heat_number }})</h2>
-      <form method="post">
-        <input type="hidden" name="action" value="results">
-        {% for lane in range(1, lanes + 1) %}
-          {% set p = None %}
-          {% for row in participants %}
-            {% if row.lane == lane %}
-              {% set p = row %}
-            {% endif %}
-          {% endfor %}
-          <div class="row align-items-center mb-2">
-            <div class="col-3">
-              <span class="fw-semibold">Lane {{ lane }}</span>
-            </div>
-            <div class="col-5">
-              <span class="small">
-                {% if p %}{{ p.name }}{% else %}<span class="text-muted">No athlete</span>{% endif %}
-              </span>
-            </div>
-            <div class="col-4">
-              <input type="number" step="0.01" name="result_{{ lane }}" class="form-control form-control-sm" placeholder="Time">
-            </div>
-          </div>
-        {% endfor %}
-        <button class="btn btn-dark w-100 mt-2">Save Results</button>
-      </form>
-    </div>
 
-    <div class="bg-white border rounded p-3">
-      <h2 class="h6 fw-semibold mb-3">Results (Heat {{ heat_number }})</h2>
-      {% if not results %}
-        <p class="text-muted mb-0">No results yet.</p>
-      {% else %}
-        <div class="table-responsive">
-          <table class="table table-sm mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Pos</th>
-                <th>Athlete</th>
-                <th>Lane</th>
-                <th>Result</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for r in results %}
-                <tr>
-                  <td>{{ loop.index }}</td>
-                  <td>{{ r.name }}</td>
-                  <td>{{ r.lane }}</td>
-                  <td>{{ r.result_value }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+    <!-- Lane Assignment -->
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h2 class="h5 mb-3">
+                    Lane Assignments
+                </h2>
+
+
+                <form method="POST">
+
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="assign"
+                    >
+
+
+                    {% for lane in range(1, lanes + 1) %}
+
+                    <div class="row align-items-center mb-3">
+
+                        <div class="col-3">
+
+                            <strong>
+                                Lane {{ lane }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="col-9">
+
+                            <select
+                                name="lane_{{ lane }}"
+                                class="form-select"
+                            >
+
+                                <option value="">
+                                    -- Empty --
+                                </option>
+
+
+                                {% for athlete in all_athletes %}
+
+                                {% set selected = false %}
+
+                                {% for participant in participants %}
+
+                                    {% if participant.lane == lane
+                                        and participant.athlete_id == athlete.id %}
+
+                                        {% set selected = true %}
+
+                                    {% endif %}
+
+                                {% endfor %}
+
+
+                                <option
+                                    value="{{ athlete.id }}"
+                                    {% if selected %}selected{% endif %}
+                                >
+                                    {{ athlete.name }}
+                                    {% if athlete.team %}
+                                        - {{ athlete.team }}
+                                    {% endif %}
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-warning w-100"
+                    >
+                        Save Lane Assignments
+                    </button>
+
+                </form>
+
+            </div>
+
         </div>
-      {% endif %}
+
     </div>
-  </div>
+
+
+    <!-- Results Entry -->
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h2 class="h5 mb-3">
+                    Enter Results
+                </h2>
+
+
+                <form method="POST">
+
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="results"
+                    >
+
+
+                    {% for lane in range(1, lanes + 1) %}
+
+                    {% set participant = namespace(value=None) %}
+
+                    {% for row in participants %}
+
+                        {% if row.lane == lane %}
+
+                            {% set participant.value = row %}
+
+                        {% endif %}
+
+                    {% endfor %}
+
+
+                    <div class="row align-items-center mb-3">
+
+                        <div class="col-2">
+
+                            <strong>
+                                {{ lane }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="col-5">
+
+                            {% if participant.value %}
+
+                                {{ participant.value.name }}
+
+                            {% else %}
+
+                                <span class="text-muted">
+                                    Empty
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="col-5">
+
+                            <input
+                                type="number"
+                                step="0.001"
+                                name="result_{{ lane }}"
+                                class="form-control"
+                                placeholder="Result"
+                            >
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-dark w-100"
+                    >
+                        Save Results
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
-<div class="mt-3">
-  <a href="{{ url_for('main.export_results', event_id=event.id) }}" class="btn btn-outline-secondary btn-sm">
-    Export Results (CSV)
-  </a>
+
+<!-- Results Table -->
+
+<div class="card shadow-sm mt-4">
+
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <h2 class="h5 mb-0">
+                Heat {{ heat_number }} Results
+            </h2>
+
+            <a
+                href="{{ url_for('main.export_results', event_id=event.id) }}"
+                class="btn btn-sm btn-outline-secondary"
+            >
+                Export CSV
+            </a>
+
+        </div>
+
+
+        {% if results %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Position</th>
+                        <th>Athlete</th>
+                        <th>Lane</th>
+                        <th>Result</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for result in results %}
+
+                    <tr>
+
+                        <td>
+
+                            <span class="badge bg-dark">
+                                {{ loop.index }}
+                            </span>
+
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ result.name }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            Lane {{ result.lane }}
+                        </td>
+
+                        <td>
+                            {{ result.result_value }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-4">
+
+            <p class="text-muted mb-0">
+                No results have been recorded for this heat yet.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
 </div>
+
+
+<div class="mt-4">
+
+    <a
+        href="{{ url_for('main.events') }}"
+        class="btn btn-outline-secondary"
+    >
+        Back to Events
+    </a>
+
+</div>
+
 {% endblock %}

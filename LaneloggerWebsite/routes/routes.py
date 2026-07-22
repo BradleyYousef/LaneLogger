@@ -115,10 +115,7 @@ def dashboard():
 # ATHLETES
 # --------------------------------------------------
 
-@main_bp.route(
-    "/athletes",
-    methods=["GET", "POST"]
-)
+@main_bp.route("/athletes", methods=["GET", "POST"])
 @login_required
 def athletes():
 
@@ -128,35 +125,19 @@ def athletes():
 
     if request.method == "POST":
 
-        name = request.form.get(
-            "name",
-            ""
-        ).strip()
-
-        age = request.form.get(
-            "age"
-        )
-
-        gender = request.form.get(
-            "gender"
-        )
-
-        team = request.form.get(
-            "team"
-        )
+        name = request.form.get("name", "").strip()
+        age = request.form.get("age", "").strip()
+        gender = request.form.get("gender", "").strip()
+        team = request.form.get("team", "").strip()
 
         if not name:
-
-            flash(
-                "Athlete name is required.",
-                "danger"
-            )
+            flash("Athlete name is required.", "danger")
 
             return redirect(
                 url_for("main.athletes")
             )
 
-        # Generate athlete number
+        # Find the next athlete number
         last_number = db.execute(
             """
             SELECT MAX(athlete_number)
@@ -164,18 +145,17 @@ def athletes():
             WHERE user_id = ?
             """,
             (user_id,)
-        ).fetchone()[0]
+        ).fetchone()
 
-        athlete_number = (
-            last_number + 1
-            if last_number is not None
-            else 1
-        )
+        if last_number[0] is None:
+            athlete_number = 1
+        else:
+            athlete_number = last_number[0] + 1
 
+        # Add athlete
         db.execute(
             """
-            INSERT INTO athletes
-            (
+            INSERT INTO athletes (
                 user_id,
                 athlete_number,
                 name,
@@ -189,16 +169,16 @@ def athletes():
                 user_id,
                 athlete_number,
                 name,
-                age,
-                gender,
-                team
+                age if age else None,
+                gender if gender else None,
+                team if team else None
             )
         )
 
         db.commit()
 
         flash(
-            "Athlete added successfully.",
+            f"Athlete #{athlete_number} added successfully.",
             "success"
         )
 
@@ -206,12 +186,13 @@ def athletes():
             url_for("main.athletes")
         )
 
+    # Only show athletes belonging to this user
     athletes = db.execute(
         """
         SELECT *
         FROM athletes
         WHERE user_id = ?
-        ORDER BY name
+        ORDER BY athlete_number ASC
         """,
         (user_id,)
     ).fetchall()
@@ -222,18 +203,11 @@ def athletes():
     )
 
 
-@main_bp.route(
-    "/athletes/delete/<int:athlete_id>",
-    methods=["POST"]
-)
+@main_bp.route("/athletes/delete/<int:athlete_id>")
 @login_required
-def delete_athlete(
-    athlete_id
-):
+def delete_athlete(athlete_id):
 
     db = get_db()
-
-    user_id = session["user_id"]
 
     db.execute(
         """
@@ -243,7 +217,7 @@ def delete_athlete(
         """,
         (
             athlete_id,
-            user_id
+            session["user_id"]
         )
     )
 
@@ -263,24 +237,22 @@ def delete_athlete(
 # MEETS
 # --------------------------------------------------
 
-@main_bp.route(
-    "/meets"
-)
+@main_bp.route("/meets")
 @login_required
 def meets():
 
     db = get_db()
-
-    user_id = session["user_id"]
 
     meets = db.execute(
         """
         SELECT *
         FROM meets
         WHERE user_id = ?
-        ORDER BY date DESC
+        ORDER BY date
         """,
-        (user_id,)
+        (
+            session["user_id"],
+        )
     ).fetchall()
 
     return render_template(
@@ -289,45 +261,28 @@ def meets():
     )
 
 
-@main_bp.route(
-    "/meets/create",
-    methods=["GET", "POST"]
-)
+@main_bp.route("/meets/create", methods=["GET", "POST"])
 @login_required
 def create_meet():
 
+    db = get_db()
+
     if request.method == "POST":
 
-        name = request.form.get(
-            "name",
-            ""
-        ).strip()
-
-        date = request.form.get(
-            "date"
-        )
-
-        location = request.form.get(
-            "location"
-        )
+        name = request.form.get("name", "").strip()
+        meet_date = request.form.get("date", "").strip()
+        location = request.form.get("location", "").strip()
 
         if not name:
-
-            flash(
-                "Meet name is required.",
-                "danger"
-            )
+            flash("Meet name is required.", "danger")
 
             return render_template(
                 "create_meet.html"
             )
 
-        db = get_db()
-
         db.execute(
             """
-            INSERT INTO meets
-            (
+            INSERT INTO meets (
                 user_id,
                 name,
                 date,
@@ -338,12 +293,14 @@ def create_meet():
             (
                 session["user_id"],
                 name,
-                date,
+                meet_date,
                 location
             )
         )
 
         db.commit()
+
+        flash("Meet created successfully.", "success")
 
         return redirect(
             url_for("main.meets")
@@ -352,7 +309,6 @@ def create_meet():
     return render_template(
         "create_meet.html"
     )
-
 
 @main_bp.route(
     "/meets/<int:meet_id>"
@@ -402,17 +358,13 @@ def view_meet(
 # CREATE EVENT
 # --------------------------------------------------
 
-@main_bp.route(
-    "/events/create/<int:meet_id>",
-    methods=["GET", "POST"]
-)
+@main_bp.route("/meets/<int:meet_id>/events/create", methods=["GET", "POST"])
 @login_required
-def create_event(
-    meet_id
-):
+def create_event(meet_id):
 
     db = get_db()
 
+    # Get the meet belonging to the logged-in user
     meet = db.execute(
         """
         SELECT *
@@ -426,74 +378,67 @@ def create_event(
         )
     ).fetchone()
 
-    if not meet:
-
-        abort(404)
+    # The meet does not exist or belongs to another user
+    if meet is None:
+        flash("Meet not found.", "danger")
+        return redirect(url_for("main.meets"))
 
     if request.method == "POST":
 
-        name = request.form.get(
-            "name",
-            ""
-        ).strip()
+        name = request.form.get("name", "").strip()
+        event_type = request.form.get("type", "").strip()
+        discipline = request.form.get("discipline", "").strip()
+        age_group = request.form.get("age_group", "").strip()
+        gender_group = request.form.get("gender_group", "").strip()
+        event_date = request.form.get("event_date", "").strip()
+        location = request.form.get("location", "").strip()
 
-        event_type = request.form.get(
-            "event_type"
-        )
+        try:
+            lanes = int(request.form.get("lanes", 8))
+        except (TypeError, ValueError):
+            lanes = 8
 
-        discipline = request.form.get(
-            "discipline"
-        )
+        try:
+            heats = int(request.form.get("heats", 1))
+        except (TypeError, ValueError):
+            heats = 1
 
-        age_group = request.form.get(
-            "age_group"
-        )
-
-        gender_group = request.form.get(
-            "gender_group"
-        )
-
-        event_date = request.form.get(
-            "event_date"
-        )
-
-        location = request.form.get(
-            "location"
-        )
-
-        lanes = int(
-            request.form.get(
-                "lanes",
-                8
-            )
-        )
-
-        heats = int(
-            request.form.get(
-                "heats",
-                1
-            )
-        )
-
+        # Validate required fields
         if not name:
-
-            flash(
-                "Event name is required.",
-                "danger"
-            )
+            flash("Event name is required.", "danger")
 
             return render_template(
                 "create_event.html",
-                meet=meet
+                meet=meet,
+                meet_id=meet_id
             )
 
+        if not event_type:
+            flash("Event type is required.", "danger")
+
+            return render_template(
+                "create_event.html",
+                meet=meet,
+                meet_id=meet_id
+            )
+
+        if not discipline:
+            flash("Discipline is required.", "danger")
+
+            return render_template(
+                "create_event.html",
+                meet=meet,
+                meet_id=meet_id
+            )
+
+        # Create the event
         db.execute(
             """
-            INSERT INTO events
-            (
+            INSERT INTO events (
+                user_id,
                 meet_id,
                 name,
-                event_type,
+                type,
                 discipline,
                 age_group,
                 gender_group,
@@ -502,9 +447,10 @@ def create_event(
                 lanes,
                 heats
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                session["user_id"],
                 meet_id,
                 name,
                 event_type,
@@ -520,6 +466,8 @@ def create_event(
 
         db.commit()
 
+        flash("Event created successfully.", "success")
+
         return redirect(
             url_for(
                 "main.view_meet",
@@ -529,9 +477,9 @@ def create_event(
 
     return render_template(
         "create_event.html",
-        meet=meet
+        meet=meet,
+        meet_id=meet_id
     )
-
 
 # --------------------------------------------------
 # EVENTS
@@ -564,6 +512,80 @@ def events():
     return render_template(
         "events.html",
         events=events
+    )
+
+@main_bp.route("/events/delete/<int:event_id>", methods=["POST"])
+@login_required
+def delete_event(event_id):
+
+    db = get_db()
+
+    user_id = session["user_id"]
+
+    # Check that the event exists and belongs to the logged-in user
+    event = db.execute(
+        """
+        SELECT id
+        FROM events
+        WHERE id = ?
+        AND user_id = ?
+        """,
+        (
+            event_id,
+            user_id
+        )
+    ).fetchone()
+
+    if event is None:
+        flash(
+            "Event not found or you do not have permission to delete it.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("main.events")
+        )
+
+    # Delete results belonging to this event
+    db.execute(
+        """
+        DELETE FROM results
+        WHERE event_id = ?
+        """,
+        (event_id,)
+    )
+
+    # Delete event participants
+    db.execute(
+        """
+        DELETE FROM event_participants
+        WHERE event_id = ?
+        """,
+        (event_id,)
+    )
+
+    # Delete the event
+    db.execute(
+        """
+        DELETE FROM events
+        WHERE id = ?
+        AND user_id = ?
+        """,
+        (
+            event_id,
+            user_id
+        )
+    )
+
+    db.commit()
+
+    flash(
+        "Event deleted successfully.",
+        "success"
+    )
+
+    return redirect(
+        url_for("main.events")
     )
 
 
@@ -647,20 +669,232 @@ def run_event(
 
         if action == "assign":
 
-            for lane in range(
-                1,
-                lanes + 1
-            ):
+            user_id = session["user_id"]
+
+            # Make sure the event belongs to the logged-in user
+            event_owner = db.execute(
+                """
+                SELECT id
+                FROM events
+                WHERE id = ?
+                AND user_id = ?
+                """,
+                (
+                    event_id,
+                    user_id
+                )
+            ).fetchone()
+
+            if event_owner is None:
+
+                flash(
+                    "Event not found or you do not have permission to manage it.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for("main.events")
+                )
+
+
+            for lane in range(1, lanes + 1):
 
                 athlete_id = request.form.get(
                     f"lane_{lane}"
                 )
 
+
+                # If the lane is empty, remove any
+                # existing athlete from that lane
                 if not athlete_id:
+
+                    db.execute(
+                        """
+                        DELETE FROM event_participants
+
+                        WHERE event_id = ?
+                        AND heat_number = ?
+                        AND lane = ?
+                        AND user_id = ?
+                        """,
+                        (
+                            event_id,
+                            heat_number,
+                            lane,
+                            user_id
+                        )
+                    )
 
                     continue
 
-                # Verify athlete belongs to current user
+
+                # Make sure the selected athlete
+                # belongs to the logged-in user
+                athlete = db.execute(
+                    """
+                    SELECT id
+                    FROM athletes
+
+                    WHERE id = ?
+                    AND user_id = ?
+                    """,
+                    (
+                        athlete_id,
+                        user_id
+                    )
+                ).fetchone()
+
+
+                if athlete is None:
+
+                    flash(
+                        "Invalid athlete selection.",
+                        "danger"
+                    )
+
+                    continue
+
+
+                # Check whether this lane already
+                # has an athlete assigned
+                existing = db.execute(
+                    """
+                    SELECT id
+
+                    FROM event_participants
+
+                    WHERE event_id = ?
+                    AND heat_number = ?
+                    AND lane = ?
+                    AND user_id = ?
+                    """,
+                    (
+                        event_id,
+                        heat_number,
+                        lane,
+                        user_id
+                    )
+                ).fetchone()
+
+
+                if existing:
+
+                    # Update existing assignment
+                    db.execute(
+                        """
+                        UPDATE event_participants
+
+                        SET athlete_id = ?
+
+                        WHERE id = ?
+                        AND user_id = ?
+                        """,
+                        (
+                            athlete_id,
+                            existing["id"],
+                            user_id
+                        )
+                    )
+
+
+                else:
+
+                    # Create new assignment
+                    db.execute(
+                        """
+                        INSERT INTO event_participants (
+                            user_id,
+                            event_id,
+                            athlete_id,
+                            heat_number,
+                            lane
+                        )
+
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (
+                            user_id,
+                            event_id,
+                            athlete_id,
+                            heat_number,
+                            lane
+                        )
+                    )
+
+
+            db.commit()
+
+            flash(
+                "Lane assignments saved successfully.",
+                "success"
+            )
+        # ------------------------------------------
+        # SAVE RESULTS
+        # ------------------------------------------
+
+        elif action == "results":
+
+            user_id = session["user_id"]
+
+            # Verify that the event belongs to the logged-in user
+            event_owner = db.execute(
+                """
+                SELECT id
+                FROM events
+                WHERE id = ?
+                AND user_id = ?
+                """,
+                (
+                    event_id,
+                    user_id
+                )
+            ).fetchone()
+
+            if event_owner is None:
+                flash(
+                    "Event not found or you do not have permission to manage it.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for("main.events")
+                )
+
+            for lane in range(1, lanes + 1):
+
+                result_val = request.form.get(
+                    f"result_{lane}"
+                )
+
+                # No result entered for this lane
+                if not result_val:
+                    continue
+
+                # Find the athlete assigned to this lane
+                participant = db.execute(
+                    """
+                    SELECT *
+                    FROM event_participants
+                    WHERE event_id = ?
+                    AND user_id = ?
+                    AND heat_number = ?
+                    AND lane = ?
+                    """,
+                    (
+                        event_id,
+                        user_id,
+                        heat_number,
+                        lane
+                    )
+                ).fetchone()
+
+                # No athlete assigned to this lane
+                if participant is None:
+                    continue
+
+                athlete_id = participant["athlete_id"]
+
+                # Make sure the athlete belongs to this user
                 athlete = db.execute(
                     """
                     SELECT id
@@ -674,118 +908,27 @@ def run_event(
                     )
                 ).fetchone()
 
-                if not athlete:
-
+                if athlete is None:
                     continue
 
-                existing = db.execute(
-                    """
-                    SELECT id
-                    FROM event_participants
-                    WHERE event_id = ?
-                    AND heat_number = ?
-                    AND lane = ?
-                    """,
-                    (
-                        event_id,
-                        heat_number,
-                        lane
-                    )
-                ).fetchone()
-
-                if existing:
-
-                    db.execute(
-                        """
-                        UPDATE event_participants
-                        SET athlete_id = ?
-                        WHERE id = ?
-                        """,
-                        (
-                            athlete_id,
-                            existing["id"]
-                        )
-                    )
-
-                else:
-
-                    db.execute(
-                        """
-                        INSERT INTO event_participants
-                        (
-                            event_id,
-                            athlete_id,
-                            heat_number,
-                            lane
-                        )
-                        VALUES (?, ?, ?, ?)
-                        """,
-                        (
-                            event_id,
-                            athlete_id,
-                            heat_number,
-                            lane
-                        )
-                    )
-
-            db.commit()
-
-        # ------------------------------------------
-        # SAVE RESULTS
-        # ------------------------------------------
-
-        elif action == "results":
-
-            for lane in range(
-                1,
-                lanes + 1
-            ):
-
-                result_value = request.form.get(
-                    f"result_{lane}"
-                )
-
-                if not result_value:
-
-                    continue
-
-                participant = db.execute(
-                    """
-                    SELECT ep.*
-                    FROM event_participants ep
-                    JOIN athletes a
-                        ON ep.athlete_id = a.id
-                    WHERE ep.event_id = ?
-                    AND ep.heat_number = ?
-                    AND ep.lane = ?
-                    AND a.user_id = ?
-                    """,
-                    (
-                        event_id,
-                        heat_number,
-                        lane,
-                        user_id
-                    )
-                ).fetchone()
-
-                if not participant:
-
-                    continue
-
+                # Convert the result to a number
                 try:
+                    result_value = float(result_val)
 
-                    result_value = float(
-                        result_value
+                except (TypeError, ValueError):
+
+                    flash(
+                        f"Invalid result entered for Lane {lane}.",
+                        "danger"
                     )
-
-                except ValueError:
 
                     continue
 
+                # Save the result
                 db.execute(
                     """
-                    INSERT INTO results
-                    (
+                    INSERT INTO results (
+                        user_id,
                         event_id,
                         athlete_id,
                         heat_number,
@@ -793,19 +936,25 @@ def run_event(
                         result_value,
                         attempt_number
                     )
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
+                        user_id,
                         event_id,
-                        participant["athlete_id"],
+                        athlete_id,
                         heat_number,
-                        lane,
+                        participant["lane"],
                         result_value,
                         1
                     )
                 )
 
             db.commit()
+
+            flash(
+                "Results saved successfully.",
+                "success"
+            )
 
         return redirect(
             url_for(

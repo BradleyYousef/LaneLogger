@@ -1,89 +1,281 @@
 {% extends "base.html" %}
+
+{% block title %}Create Event - LaneLogger{% endblock %}
+
 {% block content %}
 
-<h1 class="h4 fw-bold mb-3">Create Event</h1>
+<div class="row justify-content-center">
 
-<form method="post" class="bg-white border rounded p-4">
+    <div class="col-lg-8">
 
-  <div class="mb-3">
-    <label class="form-label">Event Name</label>
-    <input type="text" name="name" class="form-control" required>
-  </div>
+        <h1 class="h3 fw-bold mb-2">
+            Create Event
+        </h1>
 
-  <div class="row">
-    <div class="col-md-3 mb-3">
-      <label class="form-label">Type</label>
-      <select name="type" class="form-select" required>
-        <option value="Track">Track</option>
-        <option value="Field">Field</option>
-      </select>
+        <p class="text-muted mb-4">
+            Add an athletics event to your meet.
+        </p>
+
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Event Name
+                        </label>
+
+                        <input
+                            type="text"
+                            name="name"
+                            class="form-control"
+                            placeholder="Under 16 Boys 100m"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Event Type
+                            </label>
+
+                            <select
+                                name="type"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="Track">
+                                    Track
+                                </option>
+
+                                <option value="Field">
+                                    Field
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Discipline
+                            </label>
+
+                            <select
+                                name="discipline"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select discipline
+                                </option>
+
+                                <optgroup label="Track">
+
+                                    <option value="100m">100m</option>
+                                    <option value="200m">200m</option>
+                                    <option value="400m">400m</option>
+                                    <option value="800m">800m</option>
+                                    <option value="1500m">1500m</option>
+
+                                </optgroup>
+
+                                <optgroup label="Field">
+
+                                    <option value="Long Jump">
+                                        Long Jump
+                                    </option>
+
+                                    <option value="High Jump">
+                                        High Jump
+                                    </option>
+
+                                    <option value="Triple Jump">
+                                        Triple Jump
+                                    </option>
+
+                                    <option value="Shot Put">
+                                        Shot Put
+                                    </option>
+
+                                    <option value="Discus">
+                                        Discus
+                                    </option>
+
+                                    <option value="Javelin">
+                                        Javelin
+                                    </option>
+
+                                </optgroup>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Age Group
+                            </label>
+
+                            <select
+                                name="age_group"
+                                class="form-select"
+                            >
+
+                                <option value="U10">U10</option>
+                                <option value="U12">U12</option>
+                                <option value="U14">U14</option>
+                                <option value="U16">U16</option>
+                                <option value="U18">U18</option>
+                                <option value="Open">Open</option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Gender Group
+                            </label>
+
+                            <select
+                                name="gender_group"
+                                class="form-select"
+                            >
+
+                                <option value="Male">
+                                    Male
+                                </option>
+
+                                <option value="Female">
+                                    Female
+                                </option>
+
+                                <option value="Mixed">
+                                    Mixed
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Event Date
+                            </label>
+
+                            <input
+                                type="date"
+                                name="date"
+                                class="form-control"
+                            >
+
+                        </div>
+
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Number of Lanes
+                            </label>
+
+                            <input
+                                type="number"
+                                name="lanes"
+                                class="form-control"
+                                value="8"
+                                min="1"
+                                max="12"
+                            >
+
+                        </div>
+
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Number of Heats
+                            </label>
+
+                            <input
+                                type="number"
+                                name="heats"
+                                class="form-control"
+                                value="1"
+                                min="1"
+                                max="20"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Location
+                        </label>
+
+                        <input
+                            type="text"
+                            name="location"
+                            class="form-control"
+                            placeholder="Main Athletics Track"
+                        >
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-warning"
+                    >
+                        Create Event
+                    </button>
+
+                    <a
+                        href="{{ url_for('main.view_meet', meet_id=meet_id) }}"
+                        class="btn btn-secondary"
+                    >
+                        Cancel
+                    </a>
+
+                </form>
+
+            </div>
+
+        </div>
+
     </div>
 
-    <div class="col-md-3 mb-3">
-      <label class="form-label">Discipline</label>
-      <select name="discipline" class="form-select" required>
-        <option value="100m">100m</option>
-        <option value="200m">200m</option>
-        <option value="400m">400m</option>
-        <option value="800m">800m</option>
-        <option value="1500m">1500m</option>
-        <option value="Long Jump">Long Jump</option>
-        <option value="High Jump">High Jump</option>
-        <option value="Shot Put">Shot Put</option>
-        <option value="Discus">Discus</option>
-        <option value="Javelin">Javelin</option>
-      </select>
-    </div>
-
-    <div class="col-md-3 mb-3">
-      <label class="form-label">Age Group</label>
-      <select name="age_group" class="form-select">
-        <option value="U10">U10</option>
-        <option value="U12">U12</option>
-        <option value="U14">U14</option>
-        <option value="U16">U16</option>
-        <option value="U18">U18</option>
-        <option value="Open">Open</option>
-      </select>
-    </div>
-
-    <div class="col-md-3 mb-3">
-      <label class="form-label">Gender Group</label>
-      <select name="gender_group" class="form-select">
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Mixed">Mixed</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-4 mb-3">
-      <label class="form-label">Date</label>
-      <input type="text" name="date" class="form-control" placeholder="dd/mm/yyyy">
-    </div>
-
-    <div class="col-md-8 mb-3">
-      <label class="form-label">Location</label>
-      <input type="text" name="location" class="form-control" placeholder="Track name / venue">
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-3 mb-3">
-      <label class="form-label">Lanes</label>
-      <input type="number" name="lanes" class="form-control" value="8">
-    </div>
-
-    <div class="col-md-3 mb-3">
-      <label class="form-label">Heats</label>
-      <input type="number" name="heats" class="form-control" value="1">
-    </div>
-  </div>
-
-  <button class="btn btn-warning">Create Event</button>
-  <a href="{{ url_for('main.events') }}" class="btn btn-secondary ms-2">Cancel</a>
-
-</form>
+</div>
 
 {% endblock %}

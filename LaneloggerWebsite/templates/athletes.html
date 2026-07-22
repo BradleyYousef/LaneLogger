@@ -1,29 +1,247 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Athletes</h2>
 
-<form method="post" class="mb-3">
-  <input name="name" class="form-control mb-2" placeholder="Name">
-  <input name="age" class="form-control mb-2" placeholder="Age">
-  <select name="gender" class="form-control mb-2">
-    <option>Male</option>
-    <option>Female</option>
-    <option>Mixed</option>
-  </select>
-  <input name="team" class="form-control mb-2" placeholder="Team">
-  <button class="btn btn-warning w-100">Add Athlete</button>
-</form>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-<table class="table bg-white">
-  <tr><th>Name</th><th>Age</th><th>Gender</th><th>Team</th><th></th></tr>
-  {% for a in athletes %}
-  <tr>
-    <td>{{ a.name }}</td>
-    <td>{{ a.age }}</td>
-    <td>{{ a.gender }}</td>
-    <td>{{ a.team }}</td>
-    <td><a href="{{ url_for('main.delete_athlete', athlete_id=a.id) }}" class="btn btn-sm btn-danger">Delete</a></td>
-  </tr>
-  {% endfor %}
-</table>
+    <div>
+        <h1 class="h4 fw-bold mb-1">
+            Athletes
+        </h1>
+
+        <p class="text-muted mb-0">
+            Manage the athletes registered to your account.
+        </p>
+    </div>
+
+</div>
+
+
+<!-- ADD ATHLETE -->
+
+<div class="bg-white border rounded p-4 mb-4">
+
+    <h2 class="h5 fw-semibold mb-3">
+        Add Athlete
+    </h2>
+
+    <form method="POST">
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+                    Athlete Name
+                </label>
+
+                <input
+                    type="text"
+                    name="name"
+                    class="form-control"
+                    required
+                >
+
+            </div>
+
+
+            <div class="col-md-2 mb-3">
+
+                <label class="form-label">
+                    Age
+                </label>
+
+                <input
+                    type="number"
+                    name="age"
+                    class="form-control"
+                    min="1"
+                    max="100"
+                >
+
+            </div>
+
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+                    Gender
+                </label>
+
+                <select
+                    name="gender"
+                    class="form-select"
+                >
+
+                    <option value="">
+                        Select gender
+                    </option>
+
+                    <option value="Male">
+                        Male
+                    </option>
+
+                    <option value="Female">
+                        Female
+                    </option>
+
+                    <option value="Other">
+                        Other
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+                    Team
+                </label>
+
+                <input
+                    type="text"
+                    name="team"
+                    class="form-control"
+                >
+
+            </div>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn btn-warning"
+        >
+            Add Athlete
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ATHLETE LIST -->
+
+<div class="bg-white border rounded">
+
+    <div class="p-3 border-bottom">
+
+        <h2 class="h5 fw-semibold mb-0">
+            Athlete Database
+        </h2>
+
+    </div>
+
+
+    {% if athletes %}
+
+        <div class="table-responsive">
+
+            <table class="table mb-0">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>
+                            #
+                        </th>
+
+                        <th>
+                            Name
+                        </th>
+
+                        <th>
+                            Age
+                        </th>
+
+                        <th>
+                            Gender
+                        </th>
+
+                        <th>
+                            Team
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for athlete in athletes %}
+
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    {{ athlete.athlete_number }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ athlete.name }}
+                            </td>
+
+                            <td>
+                                {{ athlete.age or "-" }}
+                            </td>
+
+                            <td>
+                                {{ athlete.gender or "-" }}
+                            </td>
+
+                            <td>
+                                {{ athlete.team or "-" }}
+                            </td>
+
+                            <td>
+
+                                <a
+                                    href="{{ url_for(
+                                        'main.delete_athlete',
+                                        athlete_id=athlete.id
+                                    ) }}"
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm(
+                                        'Delete this athlete?'
+                                    );"
+                                >
+                                    Delete
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    {% else %}
+
+        <div class="p-4 text-center">
+
+            <p class="text-muted mb-0">
+                No athletes have been added yet.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
 {% endblock %}
